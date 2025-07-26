@@ -154,7 +154,7 @@ int main(void) {
                     err = load(addr, "a.out");
                     if(err != ERR_SUCCESS) {
                         // printf("error saving file: %d [%02X]\n", err, err);
-                        put_s("error saving file: ");
+                        put_s("error loading file: ");
                         put_hex(err); // %d [%02X]\n", err, err);
                         put_s("\n");
                     }

@@ -167,13 +167,12 @@ int main(void) {
                 } break;
                 case 'h': { // help
                     printf("\n");
-                    printf("r ADDR         - dump memory starting at ADDR to ADDR+256\n");
-                    printf("r ADDR RANGE   - dump memory starting at ADDR to ADDR+RANGE\n");
-                    printf("w ADDR [bytes] - write [bytes] starting at ADDR\n");
-                    printf("s ADDR RANGE   - write ADDR to ADDR+RANGE to a.out\n");
-                    printf("s ADDR RANGE f - write ADDR to ADDR+RANGE to 'f'\n");
-                    printf("l ADDR         - load a.out into ADDR\n");
-                    printf("s ADDR f       - load 'f' into ADDR\n");
+                    printf("r[ead]  ADDR                 - dump memory starting at ADDR to ADDR+256\n");
+                    printf("r[ead]  ADDR [RANGE]         - dump memory starting at ADDR to ADDR+RANGE\n");
+                    printf("w[rite] ADDR [bytes]         - write [bytes] starting at ADDR\n");
+                    printf("s[ave]  ADDR [RANGE] [a.out] - write ADDR to ADDR+RANGE to [a.out]\n");
+                    printf("l[oad]  ADDR [a.out]         - load [a.out] into ADDR\n");
+                    printf("e[xec]  ADDR                 - execute starting at ADDR\n");
                     printf("\n");
                 } break;
                 case 'q': { // quit

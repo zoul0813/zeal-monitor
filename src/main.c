@@ -48,6 +48,7 @@ zos_err_t parse_addr(void) {
 zos_err_t parse_range(void) {
     range = 256;
     err = parse_arg(&range);
+    if(err == ERR_NO_MORE_ENTRIES) return ERR_SUCCESS;
     if(err != ERR_SUCCESS) return err;
     range++;
     return ERR_SUCCESS;
@@ -145,9 +146,6 @@ int main(void) {
                 } break;
                 case 'l': { // load
                     err = parse_addr();
-                    if(err != ERR_SUCCESS) goto end_loop;
-
-                    err = parse_range();
                     if(err != ERR_SUCCESS) goto end_loop;
 
                     err = load(addr, "a.out");

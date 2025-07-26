@@ -95,6 +95,11 @@ zos_err_t load(uint16_t addr, char* fname) {
     return close(dev);
 }
 
+void run(uint16_t addr) {
+    void (*func)(void) = (void (*)(void))addr;
+    func();  // Jump to and execute code at addr
+}
+
 int main(void) {
     printf("Zeal Monitor v0.0.0\nby David Higgins 2025\n\n");
 
@@ -152,6 +157,11 @@ int main(void) {
                     if(err != ERR_SUCCESS) {
                         printf("error saving file: %d [%02X]\n", err, err);
                     }
+                } break;
+                case 'e': { //exec
+                    err = parse_addr();
+                    if(err != ERR_SUCCESS) goto end_loop;
+                    run(addr);
                 } break;
                 case 'd': { // disassemble
                 } break;

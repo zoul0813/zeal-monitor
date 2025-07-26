@@ -1,10 +1,14 @@
-#include <stdio.h>
+// #include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
+#include <stddef.h>
+// #include <string.h>
+// #include <stdlib.h>
 #include <ctype.h>
 #include <zos_errors.h>
 #include <zos_vfs.h>
+#include <zos_sys.h>
+
+#include "utils.h"
 
 #define CMD_BUFFER_SIZE 128
 
@@ -16,21 +20,6 @@ char *cmd_sep = " ";
 uint16_t size;
 uint16_t range;
 uint16_t addr;
-
-int fflush_stdout(void); // from zeal8bitos.asm
-
-
-uint8_t parse_hex(const char *arg, uint16_t* value) {
-    char *endptr;
-    uint16_t val = strtoul(arg, &endptr, 16);
-    while(isspace((uint8_t)*endptr)) endptr++;
-    if(*endptr != '\0') {
-        printf("Invalid Hex string: %s\n", arg);
-        return 1;
-    }
-    *value = val;
-    return 0;
-}
 
 zos_err_t parse_arg(uint16_t* val) {
     cmd_tok = strtok(NULL, cmd_sep);
@@ -56,15 +45,19 @@ zos_err_t parse_range(void) {
 
 void dump(uint16_t addr, uint16_t len) {
     if(len == 0) return;
-    printf("\n");
     for(uint16_t i = 0; i < len; i++) {
         uint8_t value = *((uint8_t *)(uintptr_t)(addr + i));
         if(i % 16 == 0) {
-            printf("\n%04X: ", addr + i);
+            // printf("\n%04X: ", addr + i);
+            put_s("\n");
+            put_hex16(addr + i);
+            put_s(": ");
         }
-        printf("%02X ", value);
+        // printf("%02X ", value);
+        put_hex(value);
+        put_s(" ");
     }
-    printf("\n\n");
+    put_s("\n\n");
 }
 
 void poke(uint16_t addr, uint16_t len, uint8_t* buffer) {
@@ -101,14 +94,16 @@ void run(uint16_t addr) {
 }
 
 int main(void) {
-    printf("Zeal Monitor v0.0.0\nby David Higgins 2025\n\n");
+    put_s("Zeal Monitor v0.0.0\nby David Higgins 2025\nType 'h' for help\n\n");
 
     while(1) {
-        printf("> "); fflush_stdout();
+        put_s("> "); fflush_stdout();
         size = CMD_BUFFER_SIZE;
         err = read(DEV_STDIN, cmd, &size);
         if(err != ERR_SUCCESS) {
-            printf("%d: error reading user input\n", err);
+            // printf("%d: error reading user input\n", err);
+            put_hex(err);
+            put_s(": error reading user input\n");
             break;
         }
         cmd[size] = '\0';
@@ -146,7 +141,10 @@ int main(void) {
 
                     err = save(addr, range, "a.out");
                     if(err != ERR_SUCCESS) {
-                        printf("error saving file: %d [%02X]\n", err, err);
+                        // printf("error saving file: %d [%02X]\n", err, err);
+                        put_s("error saving file: ");
+                        put_hex(err);
+                        put_s("\n"); //%d [%02X]\n", err, err);
                     }
                 } break;
                 case 'l': { // load
@@ -155,7 +153,10 @@ int main(void) {
 
                     err = load(addr, "a.out");
                     if(err != ERR_SUCCESS) {
-                        printf("error saving file: %d [%02X]\n", err, err);
+                        // printf("error saving file: %d [%02X]\n", err, err);
+                        put_s("error saving file: ");
+                        put_hex(err); // %d [%02X]\n", err, err);
+                        put_s("\n");
                     }
                 } break;
                 case 'e': { //exec
@@ -166,17 +167,17 @@ int main(void) {
                 case 'd': { // disassemble
                 } break;
                 case 'h': { // help
-                    printf("\n");
-                    printf("r[ead]  ADDR                 - dump memory starting at ADDR to ADDR+256\n");
-                    printf("r[ead]  ADDR [RANGE]         - dump memory starting at ADDR to ADDR+RANGE\n");
-                    printf("w[rite] ADDR [bytes]         - write [bytes] starting at ADDR\n");
-                    printf("s[ave]  ADDR [RANGE] [a.out] - write ADDR to ADDR+RANGE to [a.out]\n");
-                    printf("l[oad]  ADDR [a.out]         - load [a.out] into ADDR\n");
-                    printf("e[xec]  ADDR                 - execute starting at ADDR\n");
-                    printf("\n");
+                    put_s("\n");
+                    put_s("r[ead]  ADDR                 - dump memory starting at ADDR to ADDR+256\n");
+                    put_s("r[ead]  ADDR [RANGE]         - dump memory starting at ADDR to ADDR+RANGE\n");
+                    put_s("w[rite] ADDR [bytes]         - write [bytes] starting at ADDR\n");
+                    put_s("s[ave]  ADDR [RANGE] [a.out] - write ADDR to ADDR+RANGE to [a.out]\n");
+                    put_s("l[oad]  ADDR [a.out]         - load [a.out] into ADDR\n");
+                    put_s("e[xec]  ADDR                 - execute starting at ADDR\n");
+                    put_s("\n");
                 } break;
                 case 'q': { // quit
-                    printf("Quit\n");
+                    put_s("Quit\n");
                     goto do_exit;
                 }
             }

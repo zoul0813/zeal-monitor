@@ -8,10 +8,12 @@ endif
 
 include $(ZOS_PATH)/kernel_headers/sdcc/base_sdcc.mk
 
-ZOS_ASM_INCLUDE = $(ZOS_PATH)/kernel_headers/z88dk-z80asm/
+ZOS_ASM_INCLUDE = $(ZOS_PATH)/kernel_headers/z88dk-z80asm
+ZOS_ASM_LIB = $(ZOS_PATH)/kernel_headers/z88dk-z80asm/lib
 
 all::
 	z88dk-z80asm -b -I$(ZOS_ASM_INCLUDE) -O$(OUTPUT_DIR) -oa.out src/example.asm
+	z88dk-z80asm -b  -m -l -I$(ZOS_ASM_INCLUDE) -L$(ZOS_ASM_LIB) -lstrutils.lib -O$(OUTPUT_DIR) -omons src/main.s
 
 run:
 	$(ZEAL_NATIVE_BIN) -H bin -r $(ZEAL_NATIVE_ROM) #-t tf.img -e eeprom.img

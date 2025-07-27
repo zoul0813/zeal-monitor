@@ -21,7 +21,6 @@
   "editor.detectIndentation": false,
   "files.associations": {
     "*.asm": "z80-macroasm",
-    "__locale": "c",
-    "cstdint": "c"
+    "*.s": "z80-macroasm"
 }
 }

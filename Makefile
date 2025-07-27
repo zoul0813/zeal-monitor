@@ -1,5 +1,7 @@
 BIN=mon.bin
 
+ZOS_CFLAGS=--nostdlib
+
 ifndef ZOS_PATH
     $(error "Failure: ZOS_PATH variable not found. It must point to Zeal 8-bit OS path.")
 endif

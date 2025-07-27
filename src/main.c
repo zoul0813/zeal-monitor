@@ -1,7 +1,7 @@
 // #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
-// #include <string.h>
+#include <string.h>
 // #include <stdlib.h>
 #include <ctype.h>
 #include <zos_errors.h>
@@ -21,7 +21,7 @@ uint16_t size;
 uint16_t range;
 uint16_t addr;
 
-zos_err_t parse_arg(uint16_t* val) {
+static zos_err_t parse_arg(uint16_t* val) {
     cmd_tok = strtok(NULL, cmd_sep);
     if(cmd_tok == NULL) {
         return ERR_NO_MORE_ENTRIES;
@@ -30,11 +30,11 @@ zos_err_t parse_arg(uint16_t* val) {
     return err;
 }
 
-zos_err_t parse_addr(void) {
+static zos_err_t parse_addr(void) {
     return parse_arg(&addr);
 }
 
-zos_err_t parse_range(void) {
+static zos_err_t parse_range(void) {
     range = 256;
     err = parse_arg(&range);
     if(err == ERR_NO_MORE_ENTRIES) return ERR_SUCCESS;
@@ -43,7 +43,7 @@ zos_err_t parse_range(void) {
     return ERR_SUCCESS;
 }
 
-void dump(uint16_t addr, uint16_t len) {
+static void dump(uint16_t addr, uint16_t len) {
     if(len == 0) return;
     for(uint16_t i = 0; i < len; i++) {
         uint8_t value = *((uint8_t *)(uintptr_t)(addr + i));
@@ -60,14 +60,12 @@ void dump(uint16_t addr, uint16_t len) {
     put_s("\n\n");
 }
 
-void poke(uint16_t addr, uint16_t len, uint8_t* buffer) {
+static void poke(uint16_t addr, uint16_t len, uint8_t* buffer) {
     if(len == 0) return;
-    for(uint16_t i = 0; i < len; i++) {
-        *((uint8_t *)(uintptr_t)(addr + i)) = buffer[i];
-    }
+    memcpy((void*)addr, (void*)buffer, len);
 }
 
-zos_err_t save(uint16_t addr, uint16_t len, char* fname) {
+static zos_err_t save(uint16_t addr, uint16_t len, char* fname) {
     if(len == 0) return ERR_INVALID_OFFSET;
     zos_dev_t dev = open(fname, O_CREAT | O_WRONLY);
     if(dev < 0) return -dev;
@@ -78,7 +76,7 @@ zos_err_t save(uint16_t addr, uint16_t len, char* fname) {
     return close(dev);
 }
 
-zos_err_t load(uint16_t addr, char* fname) {
+static zos_err_t load(uint16_t addr, char* fname) {
     zos_dev_t dev = open(fname, O_RDONLY);
     if(dev < 0) return -dev;
 
@@ -88,7 +86,7 @@ zos_err_t load(uint16_t addr, char* fname) {
     return close(dev);
 }
 
-void run(uint16_t addr) {
+static void run(uint16_t addr) {
     void (*func)(void) = (void (*)(void))addr;
     func();  // Jump to and execute code at addr
 }

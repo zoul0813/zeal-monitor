@@ -3,26 +3,39 @@
 
     ORG 0x4000
 
-    MACRO PUTCHAR CHAR
+    MACRO PUTCHR CHAR
         ld a, CHAR
         call _putchar
     ENDM
 
+    MACRO PUTSTR STRING, LENGTH
+        S_WRITE3(DEV_STDOUT, STRING, LENGTH)
+    ENDM
+
 _start:
-    S_WRITE3(DEV_STDOUT, _msg_splash, _msg_splash_end - _msg_splash)
+    PUTSTR(_msg_splash, _msg_splash_end - _msg_splash)
 
 _main_loop:
-    S_WRITE3(DEV_STDOUT, _msg_prompt, _msg_prompt_end - _msg_splash_end)
+    PUTSTR(_msg_prompt, _msg_prompt_end - _msg_splash_end)
     S_READ3(DEV_STDIN, _buffer, 128)
     or a ; check for errors
     jr nz, _end
 
-    ; null-terminate the buffer
+    ; null-terminate the buffer, replace the \n at the end
     ld hl, _buffer
+    dec bc
     add hl, bc
     ld (hl), 0
-    ld hl, _buffer
+    inc hl
+    ld (hl), 0xFF ; use 0xFF as an "end of command" marker???
 
+    ;; null-term each argument
+    ld hl, _buffer
+    ld a, ' '
+    call strsep
+    ld hl, de
+
+    ;; parse the first arg as the command (ignore the word, focus on char)
     ld a, (_buffer)
     cp 'q'
     jp z, _quit
@@ -47,21 +60,21 @@ _end:
     EXIT()
 
 _quit:
-    S_WRITE3(DEV_STDOUT, _msg_quit, _msg_quit_end - _msg_quit)
+    PUTSTR(_msg_quit, _msg_quit_end - _msg_quit)
     jp _end
 
 _help:
-    S_WRITE3(DEV_STDOUT, _msg_help, _msg_help_end - _msg_help)
+    PUTSTR(_msg_help, _msg_help_end - _msg_help)
     jp _main_loop
 
 _read:
     ld a, ' '
-    call strchrnul
-    or a
-    jp z, _error
+    call strsep
+    push de ; next token
 
-    push hl ; remember where we were
     call parse_hex
+    or a
+    jp nz, _error
     ld (_addr), hl
 
 
@@ -69,15 +82,15 @@ _read:
     ld (_range), hl ; default value for range
 
     pop hl ; get the buffer addr back
-
-    ld a, ' ' ; find next arg
-    call strchrnul
-    or a
-    jp z, @end
-    push hl ; remember where we were
+    ld a, ' '
+    call strsep
+    push de ; next token???
 
     call parse_hex
+    or a
+    jr nz, @range_not_parsed
     ld (_range), hl
+@range_not_parsed:
 
     ld hl, (_addr)
     call _put_hl
@@ -92,14 +105,14 @@ _read:
     push bc
 
     call _put_byte_hl
-    PUTCHAR(' ')
+    PUTCHR(' ')
 
     ld a, (_counter)
     inc a
     and 0x0F
     ld (_counter), a
     jr nz, @skip_addr
-    PUTCHAR('\n');
+    PUTCHR('\n');
     pop bc
     pop hl
     push hl
@@ -117,7 +130,7 @@ _read:
     jp @loop
 
 @end:
-    PUTCHAR('\n')
+    PUTCHR('\n')
     jp _main_loop
 
 _write:
@@ -141,7 +154,7 @@ _exec:
     jp _main_loop
 
 _error:
-    S_WRITE3(DEV_STDOUT, _msg_error, _msg_error_end - _msg_error)
+    PUTSTR(_msg_error, _msg_error_end - _msg_error)
 @end:
     jp _main_loop
 
@@ -153,7 +166,7 @@ _error:
 ;   A, HL, DE, BC
 _putchar:
     ld (_putchar_buffer), a
-    S_WRITE3(DEV_STDOUT, _putchar_buffer, 1)
+    PUTSTR(_putchar_buffer, 1)
     ret
 _putchar_buffer: DEFB 0
 
@@ -175,7 +188,7 @@ _put_hl:
     push hl
     ld a, l
     call _put_byte
-    S_WRITE3(DEV_STDOUT, _msg_addr_suffix, _msg_addr_suffix_end - _msg_addr_suffix)
+    PUTSTR(_msg_addr_suffix, _msg_addr_suffix_end - _msg_addr_suffix)
     pop hl
     ret
 

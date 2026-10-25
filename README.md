@@ -34,6 +34,9 @@ Then open a terminal, go to the source directory and type the following commands
 
 ```shell
     $ cd {project}
-    $ zde make
+    $ zde cmake
     $ zde emu
 ```
+
+The build produces `bin/mon.bin` and the sample `bin/a.out` (load address
+`0x8000`). Intermediate files stay in `build/`.
